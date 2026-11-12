@@ -171,4 +171,4 @@ For tools not listed, use the skills CLI (`npx skills add artamonovtech/terramas
 
 ## License
 
-MIT — see [LICENSE](LICENSE). The referenced documentation and templates belong to their respective upstream authors.
+MIT see [LICENSE](LICENSE). The referenced documentation and templates belong to their respective upstream authors.
