@@ -12,7 +12,7 @@ publishing actions are performed (no repository creation/push, no skills.sh inde
 
 ## Progress Status
 
-*Last updated: 2026-11-12*
+*Last updated: 2026-11-12 (publishing completed)*
 
 - [x] Steps 0–3 — done: content transferred into the repository, the skill directory
       renamed to match the frontmatter `name`, the old name replaced in all files.
@@ -21,19 +21,21 @@ publishing actions are performed (no repository creation/push, no skills.sh inde
       `npx skills add . --skill terramaster-tos-development-skills -a opencode` places files
       into `.agents/skills/terramaster-tos-development-skills/` (byte-identical copy),
       `skills-ref validate` — "Valid skill".
-      The `./install.sh --opencode` check (clones the GitHub repository) is now possible
-      — the content is pushed (see Step 5).
 - [x] Step 5 — done: content pushed to `main` via PR #1 ("Create init commit"),
-      merge commit `3409a56`. Local branch `main` is in sync with `origin/main`.
-      Follow-up: README wording fixes ("75+" claims removed) are staged locally and
-      need a follow-up commit + push before tagging (see Step 6).
-- [ ] Step 6 — tag the release `v1.0.0` (no tags exist yet, locally or on remote;
-      SKILL.md declares `version: "1.0.0"`).
-- [ ] Step 7 — repository setup (verified via GitHub API on 2026-11-12: description
-      empty, no topics). `gh` requires auth first: `gh auth login`.
-- [ ] Step 8 — skills.sh indexing: https://skills.sh/artamonovtech/terramaster-tos-development-skills
-      returns 404 (first `npx skills add` not yet performed).
-- [ ] Step 9 — final verification.
+      merge commit `3409a56`, plus follow-up commits (`b54b067` README wording,
+      `76828f6` this doc). Local branch `main` is in sync with `origin/main`.
+- [x] Step 6 — done: tag `v1.0.0` created and pushed (annotated, points at `76828f6`,
+      the final published state of `main`).
+- [x] Step 7 — done: description and all 11 topics set via `gh repo edit`
+      (verified via GitHub API on 2026-11-12).
+- [x] Step 8 — done: first `npx skills add` performed from a temp folder
+      (agent: opencode, `--copy`); the entry appeared at
+      https://www.skills.sh/artamonovtech/terramaster-tos-development-skills
+      (note: skills.sh redirects to `www.skills.sh`; a bare-URL check must follow -L).
+- [ ] Step 9 — partially done: `skills list` / `skills check` pass
+      ("All project skills are up to date"); `npx skills find` does not return the
+      skill yet — the search index updates with a delay after the first add.
+      Re-check `npx skills find terramaster` later.
 
 ---
 
@@ -87,15 +89,10 @@ After the push, GitHub Actions picks up the `update-references.yml` workflow
 (weekly cron, Mon 06:00 UTC + `workflow_dispatch`). For a one-off verification run:
 `gh workflow run update-references.yml` — or just wait until the nearest Monday.
 
-## Step 6 — Tag the release (pending)
+## Step 6 — Tag the release (done)
 
-No tags exist yet (verified locally and on remote). Tag the release to match the
-`version` field in the skill frontmatter (`SKILL.md`: `version: "1.0.0"`):
-
-```bash
-git tag -a v1.0.0 -m "TerraMaster TOS 7 app development skill v1.0.0 (upstream 18a13ee)"
-git push origin v1.0.0
-```
+Tag `v1.0.0` created and pushed on 2026-11-12 (annotated tag, points at the final
+published state of `main` after the follow-up commits).
 
 Rules:
 
@@ -107,9 +104,9 @@ Rules:
 - Note: skills.sh resolves the skill from the default branch, not from tags — tagging
   is for humans (release tracking, GitHub Releases), not required for indexing.
 
-## Step 7 — Configure the GitHub repository (pending)
+## Step 7 — Configure the GitHub repository (done)
 
-`gh` requires authentication first (`gh auth login`), then:
+Done on 2026-11-12 via `gh repo edit` (account `artamonovtech`):
 
 - **Topics** (About tab → gear, or):
   ```bash
@@ -122,13 +119,15 @@ Rules:
 - **About description**:
   "🤖 Auto-updated TerraMaster TOS 7 app development documentation for AI coding assistants — works with all major agents via the Agent Skills standard (SKILL.md)".
 
-Verified on 2026-11-12 via the public GitHub API: description empty, topics `[]` —
-this step has not been performed yet.
+Verified on 2026-11-12 via the public GitHub API: description and all 11 topics are set.
 
-## Step 8 — Indexing on skills.sh (first `npx skills add`) — pending
+## Step 8 — Indexing on skills.sh (first `npx skills add`) — done
 
-Verified on 2026-11-12: https://skills.sh/artamonovtech/terramaster-tos-development-skills
-returns 404 — the first `npx skills add` has not been performed yet.
+Done on 2026-11-12: the first `npx skills add` was performed from a temp folder
+(not from the repository), with `--agent opencode --yes --copy`. The installation
+succeeded and the entry appeared at
+https://www.skills.sh/artamonovtech/terramaster-tos-development-skills
+("1 skill"; bare skills.sh URLs redirect to `www.skills.sh` — check with `curl -L`).
 
 skills.sh indexes the repository **after the first `npx skills add`** — performed manually
 from any unrelated folder (not from the repository itself):
@@ -141,13 +140,14 @@ npx skills add artamonovtech/terramaster-tos-development-skills --skill terramas
 The CLI will ask for an agent and an installation scope — pick any; the goal of the step
 is the installation itself.
 
-## Step 9 — Final verification (pending)
+## Step 9 — Final verification (partially done)
 
-- [ ] An entry appeared at https://skills.sh/artamonovtech/terramaster-tos-development-skills
-      (may take some time after the first add).
-- [ ] `npx skills find terramaster` finds the skill.
-- [ ] In the project where the skill was installed, `npx skills check` shows the current
-      version, and `npx skills update` pulls in changes.
+- [x] An entry appeared at https://www.skills.sh/artamonovtech/terramaster-tos-development-skills
+      ("1 skill"; indexed after the first add on 2026-11-12).
+- [ ] `npx skills find terramaster` finds the skill — **not yet**: the search index
+      updates with a delay after the first add; re-check later.
+- [x] In the project where the skill was installed, `npx skills check` shows
+      "All project skills are up to date" (and `npx skills update` is available).
 
 ## Going Forward
 
