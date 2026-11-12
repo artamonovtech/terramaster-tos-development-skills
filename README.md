@@ -1,6 +1,6 @@
 # TerraMaster TOS Development Skills
 
-A **TerraMaster TOS 7 application development skill for AI coding agents (Claude Code, OpenCode, Cursor)** and 75+ other tools supported by the [skills](https://skills.sh) CLI: it teaches your agent to build, package, sign, and publish apps for TerraMaster NAS devices running TOS 7.
+A **TerraMaster TOS 7 application development skill for AI coding agents** (Claude Code, OpenAI Codex, OpenCode, and many others) supported by the [skills](https://skills.sh) CLI: it teaches your agent to build, package, sign, and publish apps for TerraMaster NAS devices running TOS 7.
 
 References are **copied unmodified** from the official [terramaster-tos/tos-app-pkg-tools](https://github.com/terramaster-tos/tos-app-pkg-tools) repository (TOS 7 Application Development Guide v2.7, Agent API docs, self-testing tool) plus the three official package templates, and are **auto-updated weekly** by GitHub Actions.
 
@@ -149,7 +149,7 @@ Built on the SKILL.md skill format used by [skills.sh](https://skills.sh). Insta
 | OpenCode | `.opencode/skills/terramaster-tos-development-skills` |
 | Cline | `.cline/skills/terramaster-tos-development-skills` |
 
-For tools not listed, use the skills CLI (`npx skills add artamonovtech/terramaster-tos-development-skills`) — it supports [75+ agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md), or run `./install.sh --help` for all installer flags.
+For tools not listed, use the skills CLI (`npx skills add artamonovtech/terramaster-tos-development-skills`) — it supports a wide range of agents, or run `./install.sh --help` for all installer flags.
 
 ## Examples
 
