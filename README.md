@@ -142,18 +142,14 @@ Built on the SKILL.md skill format used by [skills.sh](https://skills.sh). Insta
 | **Cross-agent standard** | `.agents/skills/terramaster-tos-development-skills` |
 | Claude Code (global) | `~/.claude/skills/terramaster-tos-development-skills` |
 | Claude Code (project) | `.claude/skills/terramaster-tos-development-skills` |
-| OpenCode | `.opencode/skills/terramaster-tos-development-skills` |
-| Cursor | `.cursor/skills/terramaster-tos-development-skills` |
-| Windsurf | `.windsurf/skills/terramaster-tos-development-skills` |
+| OpenAI Codex | `.agents/skills/terramaster-tos-development-skills` |
 | GitHub Copilot / VS Code | `.github/skills/terramaster-tos-development-skills` |
 | Gemini CLI | `.gemini/skills/terramaster-tos-development-skills` |
-| OpenAI Codex | `.agents/skills/terramaster-tos-development-skills` |
+| Cursor | `.cursor/skills/terramaster-tos-development-skills` |
+| OpenCode | `.opencode/skills/terramaster-tos-development-skills` |
 | Cline | `.cline/skills/terramaster-tos-development-skills` |
-| Aider | `.aider/skills/terramaster-tos-development-skills` |
-| Goose | `.goose/skills/terramaster-tos-development-skills` |
-| Roo Code | `.roo/skills/terramaster-tos-development-skills` |
 
-For tools not listed, use the skills CLI (`npx skills add artamonovtech/terramaster-tos-development-skills`) — it supports [75+ agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md).
+For tools not listed, use the skills CLI (`npx skills add artamonovtech/terramaster-tos-development-skills`) — it supports [75+ agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md), or run `./install.sh --help` for all installer flags.
 
 ## Examples
 
@@ -170,8 +166,8 @@ For tools not listed, use the skills CLI (`npx skills add artamonovtech/terramas
 ## Credits
 
 - [TerraMaster](https://www.terra-master.com/) — [tos-app-pkg-tools](https://github.com/terramaster-tos/tos-app-pkg-tools) documentation and templates
-- [skills.sh](https://skills.sh) — skills directory and discovery
 - [vercel-labs/skills](https://github.com/vercel-labs/skills) — skills CLI
+- [skills.sh](https://skills.sh) — skills directory and discovery
 
 ## License
 

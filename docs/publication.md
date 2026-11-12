@@ -12,8 +12,8 @@ publishing actions are performed (no repository creation/push, no skills.sh inde
 
 ## Progress Status
 
-- [x] Steps 0–3 — done: content transferred from `../terramaster-tos-app-skill/`,
-      the skill directory renamed, the old name replaced in all files.
+- [x] Steps 0–3 — done: content transferred into the repository, the skill directory
+      renamed to match the frontmatter `name`, the old name replaced in all files.
 - [x] Step 4 — local verification passed: the generator ran (upstream `18a13ee`),
       22 md files in `references/`, skill size ~616 KB,
       `npx skills add . --skill terramaster-tos-development-skills -a opencode` places files
@@ -26,66 +26,31 @@ publishing actions are performed (no repository creation/push, no skills.sh inde
 
 ---
 
-## Step 0 — Prerequisites (already done)
+## Step 0 — Prerequisites (done)
 
 - [x] GitHub repository created: `artamonovtech/terramaster-tos-development-skills`
       (initial commit: LICENSE, branch `main`).
 - [x] Local clone configured, remote `origin` points to the repository (SSH).
-- [x] Working content transferred — it lived in the sibling folder
-      `../terramaster-tos-app-skill/` (a working copy under the old name).
 
 Tool requirements: Node.js **22.20+** (for `npx skills`), `git`, `gh` (optional, for steps 5–6).
 
-## Step 1 — Transfer content from the working folder
+## Steps 1–3 — Transfer content, rename, replace the old name (done)
 
-From the repository directory (`terramaster-tos-development-skills/`):
+Historical record of the one-time setup: the working content was rsynced into the
+repository, the skill directory was renamed to `skills/terramaster-tos-development-skills/`
+(the directory name must match the `name` in the frontmatter), and the old skill name was
+replaced in the 5 hand-written files (SKILL.md, README.md, install.sh,
+scripts/generate-references.sh, .github/workflows/update-references.yml). Generated
+content (`references/`, templates) never contained the old name.
 
-```bash
-# Everything from the working copy except its .git
-rsync -a --exclude='.git' --exclude='.DS_Store' ../terramaster-tos-app-skill/ ./
-```
-
-Expected result: the repository gains `skills/`, `scripts/`, `.github/`,
-`install.sh`, `README.md`, `.gitignore` (LICENSE is already there).
-
-## Step 2 — Rename the skill directory
-
-The `skills/<name>/` directory name must match the `name` in the frontmatter:
-
-```bash
-git mv skills/terramaster-tos-app-skill skills/terramaster-tos-development-skills
-```
-
-## Step 3 — Replace the old name in all files
-
-The old name `terramaster-tos-app-skill` appears in exactly 5 files
-(`references/` and templates have **no** occurrences — verified with grep, the replacement
-is safe):
-
-| File | What gets replaced |
-|---|---|
-| `skills/terramaster-tos-development-skills/SKILL.md` | `name:` in frontmatter, `metadata.source-repo` |
-| `README.md` | `npx skills add` commands, clone URLs, install paths, "Structure" block |
-| `install.sh` | `REPO_URL`, `SKILL_NAME`, help text |
-| `scripts/generate-references.sh` | `SKILL_DIR` |
-| `.github/workflows/update-references.yml` | `skills/…` paths in validate/limit/commit steps |
-
-```bash
-grep -rl 'terramaster-tos-app-skill' --exclude-dir=.git . \
-  | xargs sed -i '' 's/terramaster-tos-app-skill/terramaster-tos-development-skills/g'
-
-# Check: no occurrences must remain
-! grep -r 'terramaster-tos-app-skill' --exclude-dir=.git .
-```
-
-## Step 4 — Local verification
+## Step 4 — Local verification (done)
 
 ```bash
 # 1. The generator runs with the new paths and writes .source-version
 bash scripts/generate-references.sh
 
 # 2. Size and composition
-du -sh skills/terramaster-tos-development-skills/        # ~480 KB
+du -sh skills/terramaster-tos-development-skills/        # ~616 KB
 find skills/terramaster-tos-development-skills/references -name '*.md' | wc -l   # 22
 
 # 3. CLI install test from the repository root:
@@ -112,17 +77,21 @@ git push origin main
 ```
 
 After the push, GitHub Actions picks up the `update-references.yml` workflow
-(weekly cron, Thu 06:00 UTC + `workflow_dispatch`). For a one-off verification run:
-`gh workflow run update-references.yml` — or just wait until the nearest Thursday.
+(weekly cron, Mon 06:00 UTC + `workflow_dispatch`). For a one-off verification run:
+`gh workflow run update-references.yml` — or just wait until the nearest Monday.
 
 ## Step 6 — Configure the GitHub repository
 
 - **Topics** (About tab → gear, or):
   ```bash
-  gh repo edit --add-topic terramaster --add-topic tos --add-topic nas \
-               --add-topic agent-skills --add-topic claude-skills --add-topic ai-skills
+  gh repo edit --add-topic terramaster --add-topic tos --add-topic homelab \
+               --add-topic docker --add-topic docker-compose \
+               --add-topic self-hosted --add-topic agent-skills \
+               --add-topic skill-md --add-topic claude-code \
+               --add-topic codex --add-topic opencode
   ```
-- **About description**: "TerraMaster TOS 7 application development skill for AI coding agents (Claude Code, OpenCode, Cursor)".
+- **About description**:
+  "🤖 Auto-updated TerraMaster TOS 7 app development documentation for AI coding assistants — works with 20+ tools via the Agent Skills standard (SKILL.md)".
 
 ## Step 7 — Indexing on skills.sh (first `npx skills add`)
 

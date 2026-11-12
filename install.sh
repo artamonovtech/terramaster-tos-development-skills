@@ -77,6 +77,25 @@ if [[ -z "$TARGET" ]]; then
     TARGET=".agents/skills/$SKILL_NAME"
 fi
 
+# ── Target safety checks ───────────────────────────────────────────────
+# The target directory is deleted (`rm -rf`) before every install, so refuse
+# dangerous or ambiguous destinations before any destructive step.
+if [[ "$TARGET" == "/" || "$TARGET" == "$HOME" || "$TARGET" == "$HOME/" ]]; then
+    echo "ERROR: refusing to install to '$TARGET'." >&2
+    exit 1
+fi
+if [[ "$TARGET" == *..* ]]; then
+    echo "ERROR: refusing target with '..' path components: '$TARGET'." >&2
+    exit 1
+fi
+if [[ -d "$TARGET" && -n "$(ls -A "$TARGET" 2>/dev/null)" && ! -f "$TARGET/SKILL.md" ]]; then
+    echo "ERROR: '$TARGET' exists, is not empty, and contains no SKILL.md." >&2
+    echo "    It does not look like a previous install of this skill, so it" >&2
+    echo "    will NOT be deleted. Use an empty directory, an existing install" >&2
+    echo "    of this skill, or a different --custom path." >&2
+    exit 1
+fi
+
 echo "==> Installing TerraMaster TOS app development skill"
 echo "    Target: $TARGET"
 
@@ -107,8 +126,10 @@ if [[ -f "$TARGET/SKILL.md" ]]; then
     echo "    Templates: $(find "$TARGET/assets/templates" -type f 2>/dev/null | wc -l | tr -d ' ') files"
 
     if [[ -f "$TARGET/references/.source-version" ]]; then
-        source "$TARGET/references/.source-version"
-        echo "    Source: $source_repo $source_commit ($source_date)"
+        # Parse the metadata file WITHOUT executing it: it is repo-owned
+        # content and could be tampered with upstream — never `source` it.
+        kv() { sed -n "s/^$1='\([^']*\)'$/\1/p" "$TARGET/references/.source-version" | head -n 1; }
+        echo "    Source: $(kv source_repo) $(kv source_commit) ($(kv source_date))"
     fi
 else
     echo "    ERROR: SKILL.md not found!"
