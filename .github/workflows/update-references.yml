@@ -1,0 +1,117 @@
+name: Update TOS Documentation References
+
+on:
+  schedule:
+    # Run weekly on Mondays at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write        # push the update branch
+  pull-requests: write   # open the PR
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Generate references from upstream
+        run: bash scripts/generate-references.sh
+
+      - name: Validate skill
+        run: |
+          npx --yes skills-ref@0.1.5 validate skills/terramaster-tos-development-skills
+          LINES=$(wc -l < skills/terramaster-tos-development-skills/SKILL.md)
+          echo "SKILL.md lines: $LINES"
+          if [ "$LINES" -ge 500 ]; then
+            echo "ERROR: SKILL.md must stay under the 500-line limit"
+            exit 1
+          fi
+
+      # Supply-chain guard: upstream content is copied 1:1 by the generator.
+      # Scan the generated content for injection / download-exec / exfiltration
+      # patterns so a compromised upstream repo cannot silently ship through
+      # an automated commit. Any hit fails the run before a PR is opened.
+      - name: Security scan generated content
+        run: |
+          cd skills/terramaster-tos-development-skills
+          # curl|bash / wget|sh variants are anchored to line start: upstream
+          # prose legitimately *mentions* the pattern (e.g. Review Standards
+          # lists "curl | bash" among prohibited deb-script operations), so
+          # only command-style lines (code fences) are treated as malicious.
+          PATTERNS='^[[:space:]]*(curl|wget)[^|]*\|[[:space:]]*(ba)?sh|(curl|wget).*-o[[:space:]]*/(tmp|var)/|ignore (all )?(previous|prior) (instructions|prompts)|disregard (all )?(previous|above)|do not (tell|inform|mention) the user|keep this (secret|hidden)|base64 (-d|--decode)|nc -e|/dev/tcp/|\\x[0-9a-fA-F]{2}(\\x[0-9a-fA-F]{2}){4,}'
+          MATCHES=$(grep -rniE "$PATTERNS" SKILL.md references/ assets/ || true)
+          if [ -n "$MATCHES" ]; then
+            echo "ERROR: security scan flagged content copied from upstream:"
+            echo "$MATCHES"
+            echo ""
+            echo "Review the matches above. If they are false positives, adjust"
+            echo "PATTERNS in .github/workflows/update-references.yml."
+            exit 1
+          fi
+          echo "Security scan clean."
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ -z "$(git status --porcelain skills/)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Upstream content lands on main only through human review: push to a
+      # per-commit branch and open a PR instead of committing directly.
+      - name: Commit to update branch
+        if: steps.changes.outputs.changed == 'true'
+        id: branch
+        run: |
+          # Parse metadata WITHOUT executing it (never `source` repo content).
+          FILE=skills/terramaster-tos-development-skills/references/.source-version
+          kv() { sed -n "s/^$1='\([^']*\)'$/\1/p" "$FILE" | head -n 1; }
+          COMMIT=$(kv source_commit)
+          BRANCH="update-references/${COMMIT}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add skills/
+          git commit -m "docs: update references (tos-app-pkg-tools ${COMMIT})"
+          git push origin "$BRANCH"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "commit=${COMMIT}" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+          COMMIT: ${{ steps.branch.outputs.commit }}
+        run: |
+          # Write the PR body to a file first: keeps the heredoc literal
+          # (no command substitution of repo-controlled strings) and makes
+          # the commit placeholder substitution explicit.
+          cat > pr-body.md <<'EOF'
+          Automated weekly sync of `skills/terramaster-tos-development-skills/` from upstream [terramaster-tos/tos-app-pkg-tools](https://github.com/terramaster-tos/tos-app-pkg-tools).
+
+          - Source commit: __COMMIT__
+          - Validation (`skills-ref validate`, SKILL.md line limit): passed
+          - Security scan (injection / download-exec / exfiltration patterns): passed
+
+          **Review checklist before merging:**
+          - [ ] Diff touches only `skills/terramaster-tos-development-skills/` (references + templates + `.source-version`)
+          - [ ] Security scan step log reviewed in the workflow run
+          - [ ] No changes to hand-written files (SKILL.md, install.sh, scripts/, workflows/)
+
+          Merging this PR is the only path for upstream content to reach `main`.
+          EOF
+          sed -i "s/__COMMIT__/${COMMIT}/" pr-body.md
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "docs: update references (tos-app-pkg-tools ${COMMIT})" \
+            --body-file pr-body.md

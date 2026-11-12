@@ -1,0 +1,17 @@
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Local test artifacts from `npx skills add .`
+.agents/
+.opencode/
+.claude/
+.cursor/
+skills-lock.json
