@@ -432,7 +432,6 @@ Below is the config.ini standard template, divided into three independent exampl
   "height": 680,
   "help": "https://example.com/docs",
   "version": "1.0.0",
-  "recommend": false,
   "beta": false,
   "low_version": "TOS7.0",
   "category": ["Utilities"],
@@ -443,7 +442,7 @@ Below is the config.ini standard template, divided into three independent exampl
   "system_id": "dev-myapp",
   "package": "dev-myapp",
   "user": "dev-myapp",
-  "allow_open_in_mobile": false
+  "allow_open_in_mobile": false    // Set to true only if the app is responsive and its authentication works standalone in a mobile browser.
 }
 ```
 
@@ -459,7 +458,6 @@ Below is the config.ini standard template, divided into three independent exampl
   "path": "http://${ip}:8686",
   "help": "https://example.com/docs",
   "version": "1.0.0",
-  "recommend": false,
   "beta": false,
   "low_version": "TOS7.0",
   "category": ["Utilities"],
@@ -470,7 +468,7 @@ Below is the config.ini standard template, divided into three independent exampl
   "system_id": "dev-myapp",
   "package": "dev-myapp",
   "user": "dev-myapp",
-  "allow_open_in_mobile": false
+  "allow_open_in_mobile": false   // Set to true only if the app is responsive and its authentication works standalone in a mobile browser.
 }
 ```
 
@@ -484,7 +482,6 @@ Below is the config.ini standard template, divided into three independent exampl
   "exec": true,
   "help": "https://example.com/docs",
   "version": "1.0.0",
-  "recommend": false,
   "beta": false,
   "low_version": "TOS7.0",
   "category": ["Utilities"],
@@ -495,7 +492,7 @@ Below is the config.ini standard template, divided into three independent exampl
   "system_id": "dev-myapp",
   "package": "dev-myapp",
   "user": "dev-myapp",
-  "allow_open_in_mobile": false
+  "allow_open_in_mobile": false   // Set to true only if the app is responsive and its authentication works standalone in a mobile browser.
 }
 ```
 
@@ -520,7 +517,6 @@ Below is the config.ini standard template, divided into three independent exampl
 | `height` | int | No | Default window height | Only effective when `open_path=false`. The height of the application page when opened, default 680. |
 | `help` | string | ✅ Yes | Help documentation URL | Help documentation, wiki, or community tutorial link of the application. **Required:** every submission must provide the application's help / documentation URL — it is one of the fields the platform validates for presence and non-emptiness (id / icon / publisher / exec / version / help / category / platform / application_type / user). Users rely on it to find usage documentation, so it must not be left empty. |
 | `version` | string | ✅ Yes | Application version number, displayed in the App Center | Must follow the 4.2 Version Number Specification (character rules, numeric comparability, and must be greater than the previously published version) — a specification requirement upheld at manual review: the platform's automated validation does not inspect version numbers at all (agent-api §6.5.6). A digits-and-dots value that increases with every release (e.g. `"1.0.0"`, `"2.3.1"`) also lets the App Center detect updates — see 4.2 Version Number Specification. |
-| `recommend` | bool | ✅ Yes | Whether the application is recommended | `recommend` — Recommendation flag, uniformly set by platform operations after review based on application quality. **Developers must always set this to `false` when submitting.** This field is managed by the platform; developers must not modify it to `true` on their own. |
 | `beta` | bool | ✅ Yes | Whether it is a beta version | `true` = beta version, only shown to test users; `false` = stable version, shown to all users. |
 | `low_version` | string | No | Minimum supported TOS version | Minimum supported TOS system version. Specifies the minimum TOS version on which the application can run normally. This is NOT the application's own version. **Optional:** leaving it empty is allowed and does not block submission; when provided it must be TOS 7.0 or higher. Use a plain numeric version in MAJOR.MINOR or MAJOR.MINOR.PATCH format (e.g. 7.0, 7.1); an empty value means the application declares no minimum TOS version. |
 | `category` | []string | ✅ Yes | Application categories | Up to 3 categories, selected from the official category list (see [Appendix A](20_Appendix.md#appendix-a-application-categories)). **The first category is the primary category** — it determines the default display section of the application. Arrange from most specific to most general. Exceeding the category limit results in rejection. |
@@ -532,7 +528,7 @@ Below is the config.ini standard template, divided into three independent exampl
 | `package` | string | Conditionally Required | Deb package name | **Required for Deb applications.** Must match the `Package` field in DEBIAN/control. Leave empty for Docker applications. |
 | `compose_project` | string | Conditionally Required | Docker Compose project name | **Required for Docker applications.** Specifies the name used when creating the docker-compose project; must conform to Docker Compose project naming conventions (only lowercase letters, digits, hyphens, and underscores). Leave empty for Deb applications. Example: `"myapp-docker"`.<br>⚠️ **Note:** Although Docker Compose allows underscores, it is recommended that `compose_project` use the same character set as `id` to reduce confusion. `id` only supports lowercase letters, digits, and hyphens (no underscores). If both use the same string, do not use underscores in `compose_project` either. |
 | `user` | string | ✅ Yes | Runtime user | The system user under which the application runs. After specification, a dedicated user is automatically created (e.g., `"jellyfin"`). Deb applications must match the systemd service `User` field. **Using the root user is strictly prohibited.** |
-| `allow_open_in_mobile` | bool | No | Whether mobile access is supported | `true` = the application supports mobile access; `false` = the application does not support mobile access. Default `false`. |
+| `allow_open_in_mobile` | bool | No | Whether mobile access is supported | true = the application supports mobile access. Note: On mobile clients, true opens the application in the device's default external browser (outside the TNAS Mobile App), and the user will be required to log in to the NAS again. false = the application does not support mobile access. Default false. Developers must ensure the application's UI is responsive and its authentication logic works independently in an external browser context. |
 | `share_folders` | []string | No | Shared folders created on installation | Configures shared folders to be created for the application during installation, with folder permissions managed via ACL. **Using this field requires the `user` field to be non-empty.** Example: `["data", "config"]`. |
 
 #### 8.4.3 Key Rules
@@ -1308,6 +1304,14 @@ Description: Application data package - <App Name>
             └── init.d/
                 └── <system_id>.service
 ```
+
+> ⚠️ **CRITICAL SYSTEMD UNIT CONSTRAINTS (MUST READ):**
+> 
+> When defining the `<system_id>.service` file inside the source package, strictly adhere to the following platform constraints to ensure the application can start and communicate properly:
+> 
+> 1. **Platform Critical Paths (`/var/api` and `/tmp/api`):** The platform uses `/var/api` to expose Unix sockets for WebUI Internal Open applications. In TOS, `/var/api` is symbolically linked to `/tmp/api`. These are critical system paths managed by the platform.
+> 2. **NEVER use `PrivateTmp=true`:** Do not set `PrivateTmp=true` in your systemd unit. Enabling this will isolate the `/tmp` directory for the service. Because `/var/api` is a symlink pointing to `/tmp/api`, `PrivateTmp=true` will cause the `/var/api` symlink to dangle (point to a non-existent or empty path). As a result, your application will fail to create the required Unix socket (`/var/api/<appid>.sock`), leading to service startup failure or proxy errors.
+> 3. **Required `ReadWritePaths`:** To allow the application to create the socket under `ProtectSystem=strict`, you must explicitly add `/var/api` to the `ReadWritePaths=` directive in the `[Service]` section of your unit file.
 
 ### 8.14 Lifecycle Scripts
 

@@ -10,11 +10,10 @@ User=myapp
 Group=myapp
 WorkingDirectory=/usr/local/myapp
 ExecStart=/usr/local/myapp/bin/myapp
-
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/myapp /var/log/myapp
+ReadWritePaths=/usr/local/myapp/data /usr/local/myapp/logs /var/api
 LimitNOFILE=65536
 
 [Install]
